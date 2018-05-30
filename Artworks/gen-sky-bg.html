@@ -1,0 +1,167 @@
+<canvas width="1024" height="96" id="cv">
+<script type="text/javascript">
+	'use strict';
+
+	var COLS = 64;
+
+	var g = null;
+	var kMask = 0x0C00
+	var img = new Image();
+	img.onload = afterLoad;
+	img.src = "sky-bg.png";
+
+	var map = (function(){
+		var a = [];
+		for (var y = 0;y < 6;++y) {
+			var b = [];
+			for (var x = 0;x < COLS;++x) {
+				b.push(0);
+			}
+			a.push(b);
+		} // >
+		return a;
+	})();
+
+	function afterLoad() {
+		var cv = document.getElementById('cv');
+		g = cv.getContext('2d');
+
+		fillBase();
+
+		map[2][4] = kMask | 74;
+		map[3][3] = kMask | 76;
+		map[3][4] = kMask | 78;
+
+		// R0
+		tput( 3, 0, 32, false, false);
+		tput(19, 0, 32, false, true);
+		tput(10, 0, 32, true, false);
+		tput(15, 0, 32, true, true);
+		tput(7, 0, 34, true, false);
+		tput(28, 0, 34, true, true);
+
+		tput(31, 0, 32, false, false);
+		tput(33, 0, 34, true, true);
+		tput(40, 0, 34, true, false);
+		tput(44, 0, 32, true, false);
+		tput(50, 0, 32, false, true);
+		tput(55, 0, 34, true, false);
+		tput(60, 0, 32, true, true);
+
+		// R1
+		tput(3, 1, 36, false, false);
+		tput(22, 1, 36, false, false);
+		tput(10, 1, 38, false, false);
+		tput(25, 1, 38, false, false);
+
+		tput(31, 1, 36, false, false);
+		tput(43, 1, 38, false, false);
+		tput(51, 1, 36, false, false);
+		tput(59, 1, 38, false, false);
+
+		// R2
+		tput(1, 2, 40, false, false);
+		tput(7, 2, 40, false, false);
+		tput(16, 2, 40, true, true);
+		tput(29, 2, 40, true, true);
+
+		tput(0, 2, 42, false, false);
+		tput(11, 2, 42, true, true);
+
+
+		tput(33, 2, 40, false, false);
+		tput(39, 2, 40, true, true);
+		tput(48, 2, 40, false, false);
+		tput(56, 2, 40, true, true);
+
+		tput(45, 2, 42, true, true);
+		tput(60, 2, 42, false, false);
+
+		// ground
+		tput(33, 5, 72, true, false);
+		tput(34, 5, 64, false, false);
+		tput(35, 5, 70, true, false);
+		tput(36, 5, 70, false, false);
+
+		tput(37, 5, 64, false, false);
+		tput(38, 5, 66, true, false);
+		tput(39, 5, 66, false, false);
+		tput(40, 5, 68, false, false);
+		tput(41, 5, 70, false, false);
+		tput(42, 5, 72, false, false);
+
+		tput(43, 5, 72, true, false);
+		tput(44, 5, 70, true, false);
+		tput(45, 5, 66, true, false);
+		tput(46, 5, 70, true, false);
+		tput(47, 5, 72, false, false);
+
+		renderMap();
+		generate();
+	}
+
+	function tput(x, y, tile, hflip, vflip) {
+		var i = tile | kMask;
+		if (hflip) { i |= 0x4000; }
+		if (vflip) { i |= 0x8000; }
+
+		map[y][x] = i;
+	}
+
+	function fillBase() {
+		for (var y = 0;y < 6;++y) {
+			for (var x = 0;x < COLS;++x) {
+				map[y][x] = kMask | (2 + 2*y);
+			}
+		}
+	}
+
+	function renderMap() {
+		for (var y = 0;y < 6;++y) {
+			for (var x = 0;x < COLS;++x) {
+				var t = map[y][x] & 0x3FF;
+				putChip(x, y, t);
+			}
+		}
+		//>
+	}
+
+	function putChip(cx, cy, tile) {
+		var tx = (tile % 16) * 8;
+		var ty = Math.floor(tile / 16) * 8;
+		g.drawImage(img, tx, ty, 16,16, cx*16, cy*16, 16,16);
+	}
+
+	function generate() {
+		var ba = new Uint8Array((32*38)*2);
+		var pos = 0;
+
+		/* FIRST SECTION */
+		var x;
+		for (var y = 0;y < 6;++y) {
+			for (x = 0;x < 32;++x) {
+				var t = map[y][x];
+				ba[pos++] = t & 0xFF;
+				ba[pos++] = t >> 8;
+			}
+		}
+		//>
+
+		/* SECOND SECTION */
+		pos = 32*32*2;
+		var x;
+		for (var y = 0;y < 6;++y) {
+			for (x = 32;x < 64;++x) {
+				var t = map[y][x];
+				ba[pos++] = t & 0xFF;
+				ba[pos++] = t >> 8;
+			}
+		}
+		//>
+
+		var blob = new Blob([ba], {type: 'application/octet-binary'});
+		var u = window.URL.createObjectURL(blob);
+		console.log(u);
+	}
+
+</script>

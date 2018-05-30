@@ -1,0 +1,40 @@
+<textarea id="out-tx" cols="147" rows="33"></textarea>
+<script type="text/javascript">
+	function makeHex(f) {
+		var i = f & 0xFFFF;
+		return '$'+ hex02(i & 0xFF) + ',$' + hex02(i >> 8);
+	}
+
+	function hex02(i) {
+		var x = i.toString(16);
+		return (x.length < 2) ? ('0'+x) : x;
+	}
+
+
+	var result = "";
+	var DIVS = 64;
+	for (var k = 0;k < DIVS;++k) {
+		result += "\n; -- "+k+" --\n";
+		for (var i = 0;i < 128;++i) {   // >
+			var rad = (i / 128.0) * Math.PI;
+			var s = Math.sin(rad);
+			var intS = (s * 256.0 * ( DIVS*1.2 / (DIVS*1.2+6-k*1.2) )) | 0;
+
+
+			if ((i%16) === 0) {
+				result += ".byte ";
+			} else {
+				result += ", ";
+			}
+
+			result += makeHex(intS);
+
+			if ((i%16) === 15) {
+				result += "\n";
+			}
+		}
+	}
+
+	document.getElementById('out-tx').value = result;
+
+</script>
